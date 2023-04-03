@@ -72,6 +72,66 @@
   - ctrl+o로 저장후 Enter를 치고 ctrl+x 로 나오기 
   - > source .bashrc : 변경 사항 반영 
   - <img width="268" alt="image" src="https://user-images.githubusercontent.com/47103479/229359642-790ee114-7adc-4eca-94c4-fd8b455577e6.png">
+- > cd data-engineering-zoomcamp/week_1_basics_n_setup/2_docker_sql/
+- > docker-compose up -d
+- <img width="1005" alt="image" src="https://user-images.githubusercontent.com/47103479/229509119-9c3e184e-37ce-4ddf-8599-581138a1e51f.png">
+- > docker ps
+- 새로운 창에서 pgcli를 설치합니다.
+  - > cd data-engineering-zoomcamp/
+  - > pip install pgcli
+  - > pgcli -h localhost -U root -d ny_taxi
+  - <img width="1002" alt="image" src="https://user-images.githubusercontent.com/47103479/229510321-8ee4ecff-ac7a-4e0c-bd10-4640650caa1d.png">
+  - 에러가 발생하여 해결하기 위해 psycopg-binary 라이브러리를 설치하고 다시 root로 로그인합니다.
+  - > pip install psycopg-binary
+  - <img width="852" alt="image" src="https://user-images.githubusercontent.com/47103479/229510580-4878b760-65fd-44f0-869e-08a55462f244.png">
+  - <img width="297" alt="image" src="https://user-images.githubusercontent.com/47103479/229511915-81151ff1-e799-4de9-8653-b11fef122a6d.png">
+- > pip uninstall pgcli
+- > conda install -c conda-forge pgcli
+  - <img width="584" alt="image" src="https://user-images.githubusercontent.com/47103479/229512237-e8aa42f2-d5c0-4367-bb9c-e74ea59d096e.png">
+  - 여기서 더 이상 넘어가지 않고 failed with initial frozen solve. Retrying with flexible solve 에러가 발생했습니다.
+  - <img width="489" alt="image" src="https://user-images.githubusercontent.com/47103479/229513238-2f8392fc-8505-4ffd-b262-eb25a8445a0c.png">
+  - conda로 패키지를 다운받을 때 최신 버전이 아니여서 생기는 에러중 하나였습니다.
+  - > conda update --all
+  - > conda install -c conda-forge pgcli
+  - <img width="630" alt="image" src="https://user-images.githubusercontent.com/47103479/229517693-2d722e14-95a5-438d-9109-29892be5224f.png">
+  - > pgcli -h localhost -U root -d ny_taxi 
+  - 이제 아무 문제 없이 잘 작동하는걸 확인할 수 있습니다.
+  - <img width="488" alt="image" src="https://user-images.githubusercontent.com/47103479/229517940-a4b8a42e-766e-43e3-8a93-a13618ea7127.png">
+
+## 로컬 머신에서 포트 포워딩 
+- VM과 연결되어있는 vscode에서 ctrl+`로 터미널을 엽니다.
+- 5432 포트와 8080 포트를 열어줍니다.
+- <img width="938" alt="image" src="https://user-images.githubusercontent.com/47103479/229526943-dcb9795c-41a3-4737-83d2-bcf33b2a653e.png">
+- 관련해서 터미널의 pgcli와 localhost:8080가 잘 연결되는지 확인합니다.
+- <img width="461" alt="image" src="https://user-images.githubusercontent.com/47103479/229527189-68bba8fa-b360-4d5b-bfc9-149a92e2386c.png">
+- ![image](https://user-images.githubusercontent.com/47103479/229527074-55af4b01-c9e9-488a-8a41-484111feac23.png)
+
+## Jupyter Notebook 
+- > pip install jupyter notebook
+- 8888 포트를 열어줍니다.
+- <img width="989" alt="image" src="https://user-images.githubusercontent.com/47103479/229528510-39ffd1c9-6d95-4cc7-bf15-163f39068842.png">
+- > wget https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2022-01.parquet : 원본 데이터를 다운로드 받습니다.
+- <img width="1001" alt="image" src="https://user-images.githubusercontent.com/47103479/229529046-09efe374-e068-4f46-9e69-ac1c1986dbff.png">
+- jupyter notebook에서 필요한 라이브러리들을 설치합니다.
+  - ![image](https://user-images.githubusercontent.com/47103479/229531278-72dc9911-7c81-496a-b9a1-1740274a823c.png)
+  - ![image](https://user-images.githubusercontent.com/47103479/229531495-1f383a57-54d3-48fd-866b-d09a75cf4fb1.png)
+- 주피터 노트북에서 postgreSQL로 table을 생성하고 데이터를 인입합니다.
+- <img width="518" alt="image" src="https://user-images.githubusercontent.com/47103479/229539313-2631426e-84b9-4b53-ba8a-1edad1b0b65b.png">
+
+## Terraform 설치
+- https://developer.hashicorp.com/terraform/downloads
+- ![image](https://user-images.githubusercontent.com/47103479/229540760-8a34c8e1-dbb0-4742-8914-45eb7e4ea5c9.png)
+- <img width="990" alt="image" src="https://user-images.githubusercontent.com/47103479/229541013-ba48e94b-d962-4132-847c-c9194580029f.png">
+- > cd bin/
+- > wget https://releases.hashicorp.com/terraform/1.4.4/terraform_1.4.4_linux_amd64.zip
+- > sudo apt-get install unzip
+- > unzip terraform_1.4.4_linux_amd64.zip
+  - <img width="997" alt="image" src="https://user-images.githubusercontent.com/47103479/229541531-1f7cd72f-c021-468f-87c7-27d330709883.png">
+- > rm terraform_1.4.4_linux_amd64.zip
+- > terraform --version : 테라폼 버전을 확인해서 설치가 잘 되었는지 확인합니다.
+- <img width="274" alt="image" src="https://user-images.githubusercontent.com/47103479/229542242-f07ed9ce-cbbb-4725-8a3e-1f8cc4a8ce4f.png">
+
+## sftp 설정 
 
 ## IAM 서비스계정 생성
 - dtc-de-user 계정 이름으로 뷰어 생성
