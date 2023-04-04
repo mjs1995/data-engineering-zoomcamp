@@ -132,9 +132,28 @@
 - <img width="274" alt="image" src="https://user-images.githubusercontent.com/47103479/229542242-f07ed9ce-cbbb-4725-8a3e-1f8cc4a8ce4f.png">
 
 ## sftp 설정 
-
-## IAM 서비스계정 생성
-- dtc-de-user 계정 이름으로 뷰어 생성
-- 키 관리에서 JSON 키추가
-- ![image](https://user-images.githubusercontent.com/47103479/229353141-2de9d376-59c3-4209-9eef-f42615ec9795.png)
-- ![image](https://user-images.githubusercontent.com/47103479/229353167-1c8e5f63-8021-4907-b687-b9b0e24311ec.png)
+- IAM 서비스계정 생성
+  - dtc-de-user 계정 이름으로 뷰어 생성
+  - 키 관리에서 JSON 키추가
+  - ![image](https://user-images.githubusercontent.com/47103479/229353141-2de9d376-59c3-4209-9eef-f42615ec9795.png)
+  - ![image](https://user-images.githubusercontent.com/47103479/229353167-1c8e5f63-8021-4907-b687-b9b0e24311ec.png)
+  - 위에서 받은 .JSON 파일을 ny-rides.json으로 변경해줍니다.
+- VM인스턴스에 연결을 하려고 했는데 Google Compute Engine ssh: connect to host <IP> port 22: Operation timed out 에러가 발생하였다.
+  - <img width="550" alt="image" src="https://user-images.githubusercontent.com/47103479/229796819-7543cedd-62b7-4d65-ae15-708e66020d5b.png">
+  - https://serverfault.com/questions/953290/google-compute-engine-ssh-connect-to-host-ip-port-22-operation-timed-out
+  - vm 인스턴스를 종료한 뒤에 수정을 누르고 자동화 부분에 해당 코드를 입력하고 인스턴스를 다시 시작합니다.
+  - ![image](https://user-images.githubusercontent.com/47103479/229803267-1ed30a83-47eb-4710-bba6-41b65f65c6ca.png)
+  - ```shell
+    #! /bin/bash
+    sudo ufw allow 22
+    ```
+  - 이 경우에도 에러가 해결이 안될때가 있습니다.
+  - > cd ~/.ssh
+  - > code config
+  - <img width="256" alt="image" src="https://user-images.githubusercontent.com/47103479/229808488-6dbb8811-69d4-4400-b84a-99d2233c0785.png">
+  - 인스턴스 정지 후 다시 시작하면 ip가 종종 바뀌게 되는데 이때 다시 수정을 해주고 연결해봅니다.
+  - <img width="638" alt="image" src="https://user-images.githubusercontent.com/47103479/229809008-a81a021f-880d-4593-971a-8ac73d3093b0.png">
+- 위에서 받은 ny-rides.json 파일을 .gc 위치로 옮겨줍니다.
+  - > mkdir .gc 
+  - > mv ~/Downloads/ny-rides.json ~/.gc
+  - <img width="332" alt="image" src="https://user-images.githubusercontent.com/47103479/229836556-6ace219e-0ff4-4e87-9e8c-96bdf793ccb1.png">
