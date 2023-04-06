@@ -157,3 +157,21 @@
   - > mkdir .gc 
   - > mv ~/Downloads/ny-rides.json ~/.gc
   - <img width="332" alt="image" src="https://user-images.githubusercontent.com/47103479/229836556-6ace219e-0ff4-4e87-9e8c-96bdf793ccb1.png">
+- sftp로 연결후에 파일을 업로드 해줍니다.
+  - <img width="998" alt="image" src="https://user-images.githubusercontent.com/47103479/230390750-c42f8f9d-265f-4ea8-bbe2-868bf347b093.png">
+- > export GOOGLE_APPLICATION_CREDENTIALS=~/.gc/ny-rides.json : VM에 있는 json 파일을 환경변수로 설정해줍니다. 
+- > gcloud auth activate-service-account --key-file $GOOGLE_APPLICATION_CREDENTIALS : google cloud cli로 인증 설정을 해줍니다.
+  - <img width="774" alt="image" src="https://user-images.githubusercontent.com/47103479/230391526-37c8923d-e4a4-4c25-ae93-a4fea29b28cb.png">
+
+## Terraform 실행
+- cd data-engineering-zoomcamp/week_1_basics_n_setup/1_terraform_gcp/terraform/ 에서 terraform init 명령어를 실행합니다. 
+- > terraform plan 에서 GCP의 프로젝트 ID를 입력해줍니다.
+  - <img width="878" alt="image" src="https://user-images.githubusercontent.com/47103479/230392756-77a22f23-c35a-412e-b84e-b4bafc937eba.png">
+  - ![image](https://user-images.githubusercontent.com/47103479/230392430-2ee6a6c7-f36c-4d5a-8b15-9bfff2315b29.png)
+  - 프로젝트 ID인 dtc-de를 입력하고 엔터를 누릅니다.
+  - <img width="994" alt="image" src="https://user-images.githubusercontent.com/47103479/230393130-73cb3017-d72d-4815-8808-0f11d8f23b54.png">
+  - variables.tf 파일을 수정해서 default값으로도 추가가 가능합니다.
+  - <img width="600" alt="image" src="https://user-images.githubusercontent.com/47103479/230393989-d5dd908c-6803-44fa-b1d9-fb6e9f94abff.png">
+  - region의 경우 asia-northeast3 이므로 해당 코드도 수정해 줍니다.
+    - <img width="617" alt="image" src="https://user-images.githubusercontent.com/47103479/230395453-a450bf98-4a43-4c33-b132-170c47d817ca.png">
+  - > terraform apply 명령을 수행합니다.
