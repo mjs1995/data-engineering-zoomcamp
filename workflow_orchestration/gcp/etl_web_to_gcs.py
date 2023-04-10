@@ -29,8 +29,8 @@ def export_data_local(df, color, dataset_file):
     return path
 
 
-@task(log_prints=True)
-def write_local(df:pd.DataFrame, color:str, dataset_file:str) -> Path:
+@task()
+def write_local(df: pd.DataFrame, color: str, dataset_file: str) -> Path:
     """write df as a parquet file"""
     path = Path(f"data/{color}/{dataset_file}.parquet")
     if not path.parent.is_dir():
@@ -38,11 +38,11 @@ def write_local(df:pd.DataFrame, color:str, dataset_file:str) -> Path:
     df.to_parquet(path, compression="gzip")
     return path
 
-@task(log_prints=True)
-def write_gcp(path: Path) -> None :
-    """Uploading parquet file to GCS"""
+@task()
+def write_gcs(path: Path) -> None:
+    """Upload local parquet file to GCS"""
     gcs_block = GcsBucket.load("zoom-gcs")
-    gcs_block.upload_from_path(from_path=f"data/{path}", to_path=path)
+    gcs_block.upload_from_path(from_path=path, to_path=path)
     return
 
 @flow()
@@ -56,9 +56,8 @@ def etl_web_to_gcs()->None:
 
     df = fetch(dataset_url)
     df_clean = clean(df)
-    path = write_local(df_clean,color,dataset_file)
-    write_gcp(path)
-
+    path = write_local(df_clean, color, dataset_file)
+    write_gcs(path)
 
 if __name__ == '__main__':
     etl_web_to_gcs()
