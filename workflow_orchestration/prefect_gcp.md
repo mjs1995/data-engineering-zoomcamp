@@ -50,7 +50,7 @@
   - 위와 같은 에러가 발생한다면 먼저 Blocks에 Type이 잘 할당 되었는지 확인이 필요할 거같습니다.
     - > prefect blocks ls
     - <img width="770" alt="image" src="https://user-images.githubusercontent.com/47103479/230915992-fc2b0996-8256-4d2f-81bc-06cd7a1a90ff.png">
-- 최종 코드는 다음과 같습니다.
+- 전체 소 코드는 다음과 같습니다.
 - ```python
   from pathlib import Path
   import pandas as pd
@@ -121,3 +121,84 @@
 - 데이터를 GCP로 수집하려면 Parquet 파일의 스키마를 사용하여 BigQuery에서 테이블을 생성해야 합니다
   - GCP > BigQuery > 추가 > Google Cloud Storage를 클릭합니다.
   - ![image](https://user-images.githubusercontent.com/47103479/230924740-8bdbbd73-7f4d-420c-9a8d-0b25af31034c.png)
+  - GCS URI 패턴을 사용하세요 옆에 찾아보기를 눌러 GCS 상의 parquet 파일을 선택해줍니다.
+  - ![image](https://user-images.githubusercontent.com/47103479/231177072-f700893a-8c24-4dd2-bd9b-573cdd4151cf.png)
+  - 아래와 같은 설정으로 빅쿼리 파일을 추가해줍니다.
+  - ![image](https://user-images.githubusercontent.com/47103479/231177626-5d3e331f-c86c-4e65-a6ee-509591d91a87.png)
+  - 테이블을 만들 수 없음: Cannot read and write in different locations: source: asia, destination: asia-northeast3 라는 error가 발생하는데 gcs의 리전이 asia이고 bigquery의 리전이 달라서 생기는 에러입니다. 즉, GCS 버킷에서 BigQuery로 데이터를 로드할 수 있도록 모든 리소스가 동일한 리전을 공유해야 합니다.
+    - GCP의 데이터 세트 만들기를 한 뒤에 GCS 버킷의 리전이 맞춰주면 되지만 저의 경우에는 GCS의 멀티 리전이 asia이고 빅쿼리에서 asia는 연동이 안되어서 데이터 이전을 해서 해결을 하려고 합니다.
+    - ![image](https://user-images.githubusercontent.com/47103479/231189468-38879e50-9176-49f6-ae7f-fdc4c95246c8.png)
+    - ![image](https://user-images.githubusercontent.com/47103479/231189687-afb89c5f-1d97-43e4-aee6-c7be67e96c13.png)
+    - 신규로 US 리전의 GCS 버킷을 만들고 기존의 asia 리전에서 데이터를 전송합니다.
+    - ![image](https://user-images.githubusercontent.com/47103479/231190178-c15563a5-38d5-4f7c-b68c-79acb4c9ee16.png)
+    - 다시 GCP에서 테이블을 추가해줍니다. prefect blocks에서도 GCP 버킷의 주소를 변경해 줍니다.
+    - ![image](https://user-images.githubusercontent.com/47103479/231190797-99322c15-280f-4167-80eb-47344a312d69.png)
+    - ![image](https://user-images.githubusercontent.com/47103479/231191359-3628a537-4efe-4f5d-a650-f427c56bd860.png)
+  - 위에서 만든 dataset을 지우고 prefect을 이용해서 etl 합니다.
+    - ![image](https://user-images.githubusercontent.com/47103479/231192094-b310152b-bfd5-4e41-987b-bc773a6ee4f4.png)
+- prefect을 실행시킬 때 Prefect Flow: ERROR   | Flow run 'xxxxxx' - Finished in state Failed('Flow run encountered an exception. google.api_core.exceptions.Forbidden: 403 GET: Access Denied: Table xxxxx: Permission bigquery.tables.get denied on table xxxxxx (or it may not exist).\n') 에러가 발생 했는데 python 스크립트 안에서 해당 프로젝트 id와 GcpCredentials의 싱크를 맞추니 해결이 되었습니다.
+  - ![image](https://user-images.githubusercontent.com/47103479/231198846-c12cc282-a4e4-4d88-a2a6-b89cbfa5580c.png)
+  - <img width="624" alt="image" src="https://user-images.githubusercontent.com/47103479/231198927-5b2f3cc4-cf7f-4c64-ade2-344205a7c0ea.png">
+  - ![image](https://user-images.githubusercontent.com/47103479/231198806-a1621e58-ec91-4344-b0bc-46496e793151.png)
+  - 실행해보면 데이터가 잘 인입된것을 볼 수 있습니다.
+  - ![image](https://user-images.githubusercontent.com/47103479/231199792-4d26bddd-8db2-4f1a-9e51-646dcf62dae1.png)
+  - ![image](https://user-images.githubusercontent.com/47103479/231200114-685dc2e6-dd29-457f-99d7-f8081691ab01.png)
+- 전체 소스 코드는 다음과 같습니다.
+- ```python
+  from pathlib import Path
+  import pandas as pd
+  from prefect import flow, task
+  from prefect_gcp.cloud_storage import GcsBucket
+  from prefect_gcp import GcpCredentials
+
+
+  @task(retries=3)
+  def extract_from_gcs(color: str, year: int, month: int) -> Path:
+      """Download trip data from GCS"""
+      gcs_path = f"data/{color}/{color}_tripdata_{year}-{month:02}.parquet"
+      gcs_block = GcsBucket.load("zoom-gcs")
+      gcs_block.get_directory(from_path=gcs_path, local_path=f"../data/")
+      return Path(f"../data/{gcs_path}")
+
+
+  @task()
+  def transform(path: Path) -> pd.DataFrame:
+      """Data cleaning example"""
+      df = pd.read_parquet(path)
+      print(f"pre: missing passenger count: {df['passenger_count'].isna().sum()}")
+      df["passenger_count"].fillna(0, inplace=True)
+      print(f"post: missing passenger count: {df['passenger_count'].isna().sum()}")
+      return df
+
+
+  @task()
+  def write_bq(df: pd.DataFrame) -> None:
+      """Write DataFrame to BiqQuery"""
+
+      gcp_credentials_block = GcpCredentials.load("zoom-gcp-creds")
+
+
+      df.to_gbq(
+          destination_table="dezoomcamp.rides",
+          project_id="dtc-de-382512",
+          credentials=gcp_credentials_block.get_credentials_from_service_account(),
+          chunksize=500_000,
+          if_exists="append",
+      )
+
+
+  @flow()
+  def etl_gcs_to_bq():
+      """Main ETL flow to load data into Big Query"""
+      color = "yellow"
+      year = 2021
+      month = 1
+
+      path = extract_from_gcs(color, year, month)
+      df = transform(path)
+      write_bq(df)
+
+
+  if __name__ == "__main__":
+      etl_gcs_to_bq()
+  ```
