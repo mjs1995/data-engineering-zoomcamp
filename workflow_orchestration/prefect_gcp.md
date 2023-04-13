@@ -202,3 +202,162 @@
   if __name__ == "__main__":
       etl_gcs_to_bq()
   ```
+
+# Parametrizing Flow & Deployments with ETL into GCS flow
+- ETL을 자동화하기 위해 방금 구축한 파이프라인을 매개변수화합니다.
+- deployments 폴더를 만들고 그 안에 year, month, color를 매개변수화 한 뒤에 코드를 재실행 합니다.
+- <img width="732" alt="image" src="https://user-images.githubusercontent.com/47103479/231787469-856c7636-c40e-4e78-9e64-324e76d74fd0.png">
+- ```python
+  from pathlib import Path
+  import pandas as pd
+  from prefect import flow, task
+  from prefect_gcp.cloud_storage import GcsBucket
+  from random import randint
+  from prefect.tasks import task_input_hash
+  from datetime import timedelta
+
+
+  @task(retries=3, cache_key_fn=task_input_hash, cache_expiration=timedelta(days=1))
+  def fetch(dataset_url: str) -> pd.DataFrame:
+      """Read taxi data from web into pandas DataFrame"""
+      # if randint(0, 1) > 0:
+      #     raise Exception
+
+      df = pd.read_csv(dataset_url)
+      return df
+
+
+  @task(log_prints=True)
+  def clean(df: pd.DataFrame) -> pd.DataFrame:
+      """Fix dtype issues"""
+      df["tpep_pickup_datetime"] = pd.to_datetime(df["tpep_pickup_datetime"])
+      df["tpep_dropoff_datetime"] = pd.to_datetime(df["tpep_dropoff_datetime"])
+      print(df.head(2))
+      print(f"columns: {df.dtypes}")
+      print(f"rows: {len(df)}")
+      return df
+
+
+  @task()
+  def write_local(df: pd.DataFrame, color: str, dataset_file: str) -> Path:
+      """Write DataFrame out locally as parquet file"""
+      path = Path(f"data/{color}/{dataset_file}.parquet")
+      if not path.parent.is_dir():
+          path.parent.mkdir(parents=True)
+      df.to_parquet(path, compression="gzip")
+      return path
+
+
+  @task()
+  def write_gcs(path: Path) -> None:
+      """Upload local parquet file to GCS"""
+      gcs_block = GcsBucket.load("zoom-gcs")
+      gcs_block.upload_from_path(from_path=path, to_path=path)
+      return
+
+
+  @flow()
+  def etl_web_to_gcs(year: int, month: int, color: str) -> None:
+      """The main ETL function"""
+      dataset_file = f"{color}_tripdata_{year}-{month:02}"
+      dataset_url = f"https://github.com/DataTalksClub/nyc-tlc-data/releases/download/{color}/{dataset_file}.csv.gz"
+
+      df = fetch(dataset_url)
+      df_clean = clean(df)
+      path = write_local(df_clean, color, dataset_file)
+      write_gcs(path)
+
+
+  @flow()
+  def etl_parent_flow(months: list[int] = [1, 2], year: int = 2021, color: str = "yellow"):
+      for month in months:
+          etl_web_to_gcs(year, month, color)
+
+
+  if __name__ == "__main__":
+      color = "yellow"
+      months = [1, 2, 3]
+      year = 2021
+      etl_parent_flow(months, year, color)
+  ```
+- ![image](https://user-images.githubusercontent.com/47103479/231788004-f0e57e98-48aa-4f3a-9097-5abc892c8572.png)
+- ![image](https://user-images.githubusercontent.com/47103479/231788166-baf1a7a7-4757-4ace-a368-758c3361a611.png)
+  - deployment는 스트림을 캡슐화하고 API를 통해 일정을 예약하거나 시작할 수 있는 서버 측 아티팩트입니다. flow는 여러 배포에 속할 수 있으며 프로그래밍하는 데 필요한 모든 것이 포함된 메타데이터가 있는 컨테이너라고 말할 수 있습니다 . 명령줄이나 Python으로 만들 수 있습니다.
+  - Prefect 워크플로에 대한 배포 생성은 Prefect API를 통해 워크플로를 관리하고 Prefect 에이전트에서 원격으로 실행할 수 있도록 워크플로 코드, 설정 및 인프라 구성을 패키징하는 것을 의미합니다.
+  - > prefect deployment build parameterized_flows.py:etl_parent_flow -n "Parameterized ETL"
+    - <img width="893" alt="image" src="https://user-images.githubusercontent.com/47103479/231798501-5df156fa-d203-44fd-bcbd-c4dbe904f973.png">
+    - 배포 하려고 했을 때 Script at './parameterized_flows.py' encountered an exception: FileNotFoundError(2, 'No such file or directory') 다음과 같은 에러가 발생했습니다. 이를 해결하기 위해서 기존 경로를 worflow_orchestration으로 옮겼서 배포했습니다.
+    - <img width="882" alt="image" src="https://user-images.githubusercontent.com/47103479/231798903-101eb987-73f8-4de9-a0eb-994c785e420a.png">
+  - 배포 결과로 yaml 파일이 생성되었습니다.
+  - <img width="644" alt="image" src="https://user-images.githubusercontent.com/47103479/231799216-39365c93-9770-4215-803f-61c85d81ed5f.png">
+  - ```yaml
+    ###
+    ### A complete description of a Prefect Deployment for flow 'etl-parent-flow'
+    ###
+    name: Parameterized ETL
+    description: null
+    version: 5a09a6eee86fd216605c8f0e27ca82c6
+    # The work queue that will handle this deployment's runs
+    work_queue_name: default
+    work_pool_name: null
+    tags: []
+    parameters: {}
+    schedule: null
+    is_schedule_active: null
+    infra_overrides: {}
+    infrastructure:
+      type: process
+      env: {}
+      labels: {}
+      name: null
+      command: null
+      stream_output: true
+      working_dir: null
+      block_type_slug: process
+      _block_type_slug: process
+
+    ###
+    ### DO NOT EDIT BELOW THIS LINE
+    ###
+    flow_name: etl-parent-flow
+    manifest_path: null
+    storage: null
+    path: /home/mjs/data-engineering-zoomcamp/week_2_workflow_orchestration
+    entrypoint: parameterized_flow.py:etl_parent_flow
+    parameter_openapi_schema:
+      title: Parameters
+      type: object
+      properties:
+        months:
+          title: months
+          default:
+          - 1
+          - 2
+          position: 0
+          type: array
+          items:
+            type: integer
+        year:
+          title: year
+          default: 2021
+          position: 1
+          type: integer
+        color:
+          title: color
+          default: yellow
+          position: 2
+          type: string
+      required: null
+      definitions: null
+    timestamp: '2023-04-13T14:50:29.732842+00:00'
+    ```
+  - > prefect deployment apply etl_parent_flow-deployment.yaml
+    - <img width="887" alt="image" src="https://user-images.githubusercontent.com/47103479/231800559-f2fe93d9-4b07-4ebb-88fc-c3265c9dd800.png">
+  - Prefect GUI로 이동하고 배포 섹션에서 방금 생성한 항목에 액세스합니다
+  - ![image](https://user-images.githubusercontent.com/47103479/231800462-a5c7e2f2-d0a7-433b-a4d6-71f3a556cff8.png)
+  - 대기열에 저장되는데 실행 시키기 위해서 prefect agent start --pool default-agent-pool --work-queue default 명령어를 입력합니다.
+  - ![image](https://user-images.githubusercontent.com/47103479/231801542-4a3ae239-7222-4be1-843f-a2564c71de1e.png)
+  - ![image](https://user-images.githubusercontent.com/47103479/231801846-a54a1f8a-d9cb-430a-b1fa-c5996c1d35c1.png)
+  - prefect Agent를 시작하면 Deployment 실행이 시작되는 것이 보입니다.
+  - <img width="891" alt="image" src="https://user-images.githubusercontent.com/47103479/231801967-9b22a205-9051-479e-bf3b-74cfa3641921.png">
+  - ![image](https://user-images.githubusercontent.com/47103479/231802501-c4d8b12c-7458-4181-85f5-c2cd3c21d7b1.png)
