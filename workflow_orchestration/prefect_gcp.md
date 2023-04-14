@@ -361,3 +361,81 @@
   - prefect Agent를 시작하면 Deployment 실행이 시작되는 것이 보입니다.
   - <img width="891" alt="image" src="https://user-images.githubusercontent.com/47103479/231801967-9b22a205-9051-479e-bf3b-74cfa3641921.png">
   - ![image](https://user-images.githubusercontent.com/47103479/231802501-c4d8b12c-7458-4181-85f5-c2cd3c21d7b1.png)
+
+# Schedules & Docker Storage with Infrastructure
+- 워크플로우의 스케줄링 시간을 설정할 수 있습니다.
+  - ![image](https://user-images.githubusercontent.com/47103479/232055239-43e0041d-4463-4ede-ba31-615c2faff673.png)
+  - > prefect deployment build parameterized_flow.py:etl_parent_flow -n etl2 --cron "0 0 * * *" -a : CLI 환경에서 설정
+  - ![image](https://user-images.githubusercontent.com/47103479/232056175-6ec51b5e-a38a-4f34-a226-f6206e642505.png)
+- Docker Container
+  - docker-requirementes.txt 파일을 생성해 줍니다.
+  - ```txt
+    pandas==1.5.2
+    prefect-gcp[cloud_storage]==0.2.3
+    protobuf==4.21.11
+    pyarrow==10.0.1
+    pandas-gbq==0.18.1
+    ```
+  - Dockerfile을 설정해 줍니다.
+  - ```docker
+    FROM prefecthq/prefect:2.7.7-python3.9
+
+    COPY docker-requirements.txt .
+
+    RUN pip install -r docker-requirements.txt --trusted-host pypi.python.org --no-cache-dir
+
+    COPY flows /opt/prefect/flows
+    RUN mkdir -p /opt/prefect/data/yellow
+    ```
+  - > docker image build -t discdiver/prefect:zoom .
+  - > docker image push discdiver/prefect:zoom : 이미지를 Docker Hub에 게시하기 위해 푸시를 수행합니다.
+    - 푸시를 수행할 때 denied: requested access to the resource is denied 에러가 발생했습니다. 도커 이미지를 빌드할때 잘못되어서 다시 시작했습니다.
+    - > docker login
+    - <img width="874" alt="image" src="https://user-images.githubusercontent.com/47103479/232064256-fe0e4afd-e2b4-469f-8b53-f7ab645fb092.png">
+    - > docker build -t mjs1995/prefect_cloud:v1 .
+    - <img width="876" alt="image" src="https://user-images.githubusercontent.com/47103479/232064389-942b90ac-6dd0-496c-b939-f1d585ca8a66.png">
+    - > docker image push mjs1995/prefect_cloud:v1 
+    - <img width="876" alt="image" src="https://user-images.githubusercontent.com/47103479/232064976-443006fd-3eac-4d97-8fca-9f69dd80a214.png">
+- 도커 컨테이너 blocks 등록을 하려고 했는데 blocks에서 조회가 되지 않습니다.
+  - ![image](https://user-images.githubusercontent.com/47103479/232073598-eec282d4-5a32-40a2-817f-8ff99da510b5.png)
+  - > pip install prefect-docker
+  - > prefect block register -m prefect_docker : 도커를 등록해줍니다.
+  - <img width="876" alt="image" src="https://user-images.githubusercontent.com/47103479/232073869-226868c1-c1b8-47f7-aa71-fbc2d8a29f52.png">
+  - 등록 결과 조회가 잘 되고 있습니다.
+  - ![image](https://user-images.githubusercontent.com/47103479/232074066-cb493a76-efa9-4adc-a8df-9491f138da25.png)
+  - Block Name을 zoom으로 Image는 위에서 빌드했던 이미지를 ImagePullPolicy는 always를 지정합니다.
+  - ![image](https://user-images.githubusercontent.com/47103479/232074593-f2d80a01-d821-407e-ae76-1b6e976a70ff.png)
+- > python flows/03_deployments/docker_deploy.py : 아래의 docker_deploy.py를 만들고 실행시킵니다.
+  - ```python
+    from prefect.deployments import Deployment
+    from parameterized_flow import etl_parent_flow
+    from prefect.infrastructure.docker import DockerContainer
+
+    docker_block = DockerContainer.load("zoom")
+
+    docker_dep = Deployment.build_from_flow(
+        flow=etl_parent_flow,
+        name="docker-flow",
+        infrastructure=docker_block,
+    )
+
+    if __name__ == "__main__":
+        docker_dep.apply()
+    ```
+  - GUI 환경에서 배포가 잘 생성 되었는지 확인합니다.
+  - ![image](https://user-images.githubusercontent.com/47103479/232076475-00cd4213-2af9-41e4-bdec-4529b4920e7f.png)
+  - > prefect profiles ls : 프로필에 연결 확인
+  - > prefect config set PREFECT_API_URL="http://127.0.0.1:4200/api" : 임시 로컬 API를 시작 시 에이전트가 발생시키는 API로 바꾸기 위해서 prefect config set이 되는는 API의 URL 및 명령과 함께 사용할 API를 구성합니다.
+  - > prefect agent start --work-queue "default" : prefect agent를 실행합니다.
+    - <img width="893" alt="image" src="https://user-images.githubusercontent.com/47103479/232077500-561e90a3-f15c-4806-8075-9a27aaba7a6d.png">
+  - > prefect deployment run etl-parent-flow/docker-flow -p "months=[1,2]" 
+  - <img width="873" alt="image" src="https://user-images.githubusercontent.com/47103479/232084918-54230b39-eeb2-40b9-a903-fe2d0d3a840e.png">
+  - prefect에서 배포할 때 문제가 발생했습니다. prefect.exceptions.ScriptError: Script at 'flows/03_deployments/parameterized_flow.py' encountered an exception: FileNotFoundError(2, 'No such file or directory') 
+  - ![image](https://user-images.githubusercontent.com/47103479/232085134-3bce1ff6-bcfd-4010-b506-d0e13d8f37d7.png)
+  - 에러를 해결 하기 위해서 아래와같이 도커파일을 수정하고 새롭게 이미지를 빌드하고 푸시했습니다.
+    - <img width="701" alt="image" src="https://user-images.githubusercontent.com/47103479/232085324-eb985036-2edb-40e9-86d4-54d187051327.png">
+    - > docker build -t mjs1995/prefect_cloud:v1 .
+    - > docker image push mjs1995/prefect_cloud:v1
+    - > prefect deployment run etl-parent-flow/docker-flow -p "months=[1,2]" 
+    - ![image](https://user-images.githubusercontent.com/47103479/232085648-64d0f778-77f7-4a5f-bb22-cd89114a2877.png)
+  - ![image](https://user-images.githubusercontent.com/47103479/232085704-26f62ffd-5b51-4e1e-a425-d36c02ceba60.png)
