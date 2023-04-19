@@ -151,3 +151,17 @@
   - ![image](https://user-images.githubusercontent.com/47103479/232524001-36848dfc-194b-421f-83ff-867505c18d7f.png)
   - ![image](https://user-images.githubusercontent.com/47103479/232524044-4237e79c-c7b7-4f78-a534-7779afe7bd6e.png)
   - ![image](https://user-images.githubusercontent.com/47103479/232524085-ecbe3634-f084-4844-aa79-00fb3052bc64.png)
+
+# BigQuery Machine Learning Deployment
+- <img width="309" alt="image" src="https://user-images.githubusercontent.com/47103479/233079775-f2475e00-3984-4f14-bd36-eaf59fcb90a7.png">
+- > gcloud auth login
+- > bq --project_id dtc-de-382512 extract -m dezoomcamp.tip_model gs://taxi_ml_model_js/tip_model : gs에 gcp의 모델을 만들어줍니다.
+  - ![image](https://user-images.githubusercontent.com/47103479/233080011-45397fc5-43de-478e-b6e8-24f7258071af.png)
+- > mkdir /tmp/model
+- > gsutil cp -r gs://taxi_ml_model_js/tip_model /tmp/model
+- > mkdir -p serving_dir/tip_model/1
+- > cp -r /tmp/model/tip_model/* serving_dir/tip_model/1
+- > docker pull tensorflow/serving
+- > docker run -p 8501:8501 --mount type=bind,source=`pwd`/serving_dir/tip_model,target=/models/tip_model -e MODEL_NAME=tip_model -t tensorflow/serving &
+- > curl -d '{"instances": [{"passenger_count":1, "trip_distance":12.2, "PULocationID":"193", "DOLocationID":"264","payment_type":"2","fare_amount":20.4,"tolls_amount":0.0}]}' -X POST http://localhost:8501/v1/models/tip_model:predict
+- > http://localhost:8501/v1/models/tip_model
