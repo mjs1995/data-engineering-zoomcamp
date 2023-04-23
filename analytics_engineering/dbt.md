@@ -36,4 +36,26 @@
   - ![image](https://user-images.githubusercontent.com/47103479/233104213-3cc78293-5f1e-4205-b684-ac6858702800.png)
   - ![image](https://user-images.githubusercontent.com/47103479/233103602-0e7cb240-b9e6-4f99-b5d3-e02d828fe9aa.png)
   - ![image](https://user-images.githubusercontent.com/47103479/233107844-a427547a-19b9-4b93-9b88-fb9257d9d196.png)
+- Initialize dbt project 눌러서 프로젝트를 초기화합니다.
+  - ![image](https://user-images.githubusercontent.com/47103479/233840151-e61dfd03-c89a-4e5b-9bbe-402477d23d65.png)
+- schema.yml 파일에는 버전, 소스 이름, 데이터베이스, 스키마 및 테이블이 포함되어 있습니다. yml 파일을 이용해서 단일 위치에서 모든 모델에 대한 연결을 변경할 수 있습니다.
+  - ![image](https://user-images.githubusercontent.com/47103479/233846968-03bd4d2c-744e-43ca-a417-03bfa44a8e7b.png)
+  - ```yml
+    version: 2
 
+    sources:
+        - name: staging
+          database: dtc-de-382512
+          schema: trips_data_all
+
+          tables:
+              - name: green_tripdata
+              - name: yellow_tripdata
+    ```
+  - ```sql
+    {{ config(materialized='table') }}
+
+    SELECT *
+    FROM {{ source('staging','green_tripdata') }}
+    ```
+  - ![image](https://user-images.githubusercontent.com/47103479/233847108-5f702ea6-814f-4798-b3f5-1f4106aef6fc.png)
