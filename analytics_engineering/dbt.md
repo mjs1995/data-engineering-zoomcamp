@@ -59,3 +59,157 @@
     FROM {{ source('staging','green_tripdata') }}
     ```
   - ![image](https://user-images.githubusercontent.com/47103479/233847108-5f702ea6-814f-4798-b3f5-1f4106aef6fc.png)
+- Macros
+  - ```sql
+    {{ config(materialized='table') }}
+
+    SELECT 
+        case payment_type
+            when 1 then 'Credit card'
+            when 2 then 'Cash'
+            when 3 then 'No charge'
+            when 4 then 'Dispute'
+            when 5 then 'Unknown'
+            when 6 then 'Voided trip'
+        end as payment_type_description
+    FROM {{ source('staging','green_tripdata') }}
+    WHERE vendorid is not null
+    ```
+  - ![image](https://user-images.githubusercontent.com/47103479/233992835-05408372-cab6-477c-b41e-afafc8b7f870.png)
+  - payment_type 의 값을 매개변수로 받고 해당 값을 반환 하는 것을 확인 하는 get_payment_type_description 매크로를 만듭니다.
+  - ```sql
+     {#
+    This macro returns the description of the payment_type 
+    #}
+
+    {% macro get_payment_type_description(payment_type) -%}
+
+        case {{ payment_type }}
+            when 1 then 'Credit card'
+            when 2 then 'Cash'
+            when 3 then 'No charge'
+            when 4 then 'Dispute'
+            when 5 then 'Unknown'
+            when 6 then 'Voided trip'
+        end
+
+    {%- endmacro %}
+    ```
+  - ```sql
+    {{ config(materialized='table') }}
+
+    SELECT 
+        {{ get_payment_type_description('payment_type') }} as payment_type_description
+    FROM{{ source('staging','green_tripdata') }}
+    WHERE vendorid is not null
+    ```
+  - ![image](https://user-images.githubusercontent.com/47103479/233994947-9e697e51-2292-4337-8ee7-9f8bbc45674d.png)
+- packages
+  - 다른 프로그래밍 언어의 라이브러리나 모듈과 유사하게 서로 다른 프로젝트 간에 매크로를 재사용할 수 있습니다. 
+  - 프로젝트에서 패키지를 사용하려면 dbt 프로젝트의 root 디렉토리에 packages.yml 구성 파일을 생성해야 합니다.
+  - ```yml
+    packages:
+      - package: dbt-labs/dbt_utils
+        version: 0.8.0
+    ```
+  - > dbt deps : 프로젝트 내 패키지의 모든 종속성 및 파일을 다운로드하는 명령을 실행합니다. 완료되면 프로젝트에 dbt_packages/dbt_utils 디렉토리가 생성됩니다
+    - ![image](https://user-images.githubusercontent.com/47103479/233995888-3eb1f76f-5ce8-4f77-9a42-f2135e3ae7de.png)
+  - ![image](https://user-images.githubusercontent.com/47103479/233995588-4ce8dc9d-4753-4398-a3c3-d80beec700fd.png)
+- Variables 
+  - ```sql
+    {{ config(materialized='table') }}
+
+    SELECT *
+    FROM {{ source('staging','green_tripdata') }}
+    {% if var('is_test_run', default=true) %}
+
+        limit 100
+
+    {% endif %}
+    ```
+  - ![image](https://user-images.githubusercontent.com/47103479/233996540-09269444-ad3f-4603-9507-6257e39df6e7.png)
+  - > dbt build --var 'is_test_run: false' : 모델을 빌드할 때 명령줄에서도 사용 가능합니다. 
+  - > dbt run --var 'is_test_run: false'
+  - ![image](https://user-images.githubusercontent.com/47103479/233997699-4c3c66b3-d638-4b6e-922e-da27dcbc09f8.png)
+  - ![image](https://user-images.githubusercontent.com/47103479/233998047-0be1e3d6-2a15-4afd-9983-ffa8ea454674.png)
+- seed
+  - 시드를 생성하려면 저장소 의 /seeds 디렉토리에 CSV 파일을 업로드하고 명령을 실행하기만 하면 됩니다. 
+  - dbt seed taxi_zone_lookup.csv. 실행하면 dbt seed디렉토리의 모든 CSV가 데이터베이스에 로드됩니다.
+  - ![image](https://user-images.githubusercontent.com/47103479/233998864-39abdb56-c290-4c6e-bf29-03639d917bd9.png)
+  - ```yaml
+    seeds: 
+      taxi_rides_ny:
+          taxi_zone_lookup:
+              +column_types:
+                  locationid: numeric
+    ```
+  - ![image](https://user-images.githubusercontent.com/47103479/233999620-4cc70dbe-a43b-4222-89d8-e17716234ddf.png)
+  - > dbt seed : dbt 프로젝트의 시드 데이터를 생성
+  - ![image](https://user-images.githubusercontent.com/47103479/233999555-131ad7cb-fe85-4090-bf96-4368599ff6f0.png)
+  - ![image](https://user-images.githubusercontent.com/47103479/233999795-26a01008-c9da-407b-a552-184d98344471.png)
+  - > dbt seed --full-refresh : dbt 프로젝트의 시드 데이터를 다시 생성할 때 사용됩니다. --full-refresh 옵션은 시드 데이터를 완전히 새로 고침하고 기존 데이터를 모두 삭제한 후, 새로운 시드 데이터를 다시 생성
+  - ![image](https://user-images.githubusercontent.com/47103479/233999991-3ec249cd-8105-4fb7-82a5-ec2323e56e8b.png)
+
+# dbt test
+- dbt 모델의 유효성을 검사하는 데 사용됩니다. dbt test는 dbt 모델이 데이터의 정합성과 일관성을 보장하는지 검증하는 데 사용되는 유용한 도구입니다.
+- dbt test는 모델을 실행하기 전에 실행됩니다. 모델의 실행 결과가 올바른지 확인하고, 예상한 결과와 실제 결과가 일치하는지 검증합니다. 예를 들어, 모델이 특정 조건에 대해 올바른 값을 반환하는지 확인하거나, 특정 테이블에서 유일한 값을 가져오는지 확인할 수 있습니다.
+- ```yml
+  columns:
+    - name: tripid
+      description: Primary key for this table, generated with a concatenation of vendorid+pickup_datetime
+      tests:
+          - unique:
+              severity: warn
+          - not_null:
+              severity: warn
+    - name: Pickup_locationid
+      description: locationid where the meter was engaged.
+      tests:
+        - relationships:
+            to: ref('taxi_zone_lookup')
+            field: locationid
+            severity: warn
+    - name: Payment_type 
+      description: >
+        A numeric code signifying how the passenger paid for the trip.
+      tests: 
+        - accepted_values:
+            values: "{{ var('payment_type_values') }}"
+            severity: warn
+            quote: false
+  ```
+- dbt test는 모델을 실행할 때 테스트 쿼리를 실행합니다. 이 쿼리는 모델의 실행 결과를 검증하는 데 사용됩니다. 테스트 쿼리는 SQL 또는 jinja 템플릿으로 작성할 수 있습니다. dbt test는 이러한 테스트 쿼리를 실행하여 검증 결과를 반환합니다.
+- ![image](https://user-images.githubusercontent.com/47103479/234008631-8c33e8be-eeb2-4aa6-a9e2-5c7da07e1c44.png)
+- > dbt test --select stg_green_tripdata
+- ![image](https://user-images.githubusercontent.com/47103479/234008735-22a36fe5-792d-436a-a8a1-54123a9d3fe8.png)
+
+# Build the First dbt Models 
+- dbt는 데이터베이스를 위한 오픈 소스 SQL 모델링 도구입니다. 데이터 파이프라인의 구성 요소를 버전 관리하고 테스트하고 문서화하는 데 사용할 수 있습니다.
+- dbt run은 모델을 실행하는 것이며, dbt build는 모델을 실행하고 결과를 데이터베이스에 적재하는 것입니다.
+- dbt run
+  - dbt 프로젝트에서 정의한 SQL 모델들을 실행하는 명령어입니다.
+  - 모델을 실행하면 해당 모델이 참조하는 모든 종속성이 자동으로 실행됩니다.
+  - 실행 중에 발생하는 오류 및 경고를 표시합니다.
+  - 명령어를 실행하면 데이터베이스에 정의된 모든 모델이 최신 상태로 업데이트됩니다.
+- dbt build
+  - dbt 프로젝트에서 정의한 SQL 모델들을 실행하고 결과를 데이터베이스에 적재하는 명령어입니다.
+  - 실행 중에 발생하는 오류 및 경고를 표시합니다.
+  - 명령어를 실행하면 데이터베이스에 정의된 모든 모델이 최신 상태로 업데이트되며, 이전 결과가 삭제되고 새로운 결과가 적재됩니다.
+- dbt 모델의 fact_trips 의 계보를 확인 하고 소스 레이어에서 스테이징 및 마지막으로 최종 테이블까지의 flow를 확인합니다.
+- ![image](https://user-images.githubusercontent.com/47103479/234006306-61d24570-439c-4577-a5fe-f6eac9ec7bdb.png)
+- > dbt run 
+  - ![image](https://user-images.githubusercontent.com/47103479/234007809-8bbb31bb-5eea-4699-970f-d5c4be0140b3.png)
+- > dbt build 
+  - ![image](https://user-images.githubusercontent.com/47103479/234007938-9ebceba9-3948-4134-80e1-4494405d91cf.png)
+- ![image](https://user-images.githubusercontent.com/47103479/234008091-749da201-1465-4f6e-b43c-274987163538.png)
+
+# Deployment Using dbt Cloud
+- ![image](https://user-images.githubusercontent.com/47103479/234021073-ab0ff278-e5ae-4a49-b8c3-1b9a836daf4e.png)
+- [dbt](https://www.getdbt.com/product/what-is-dbt/)를 사용하면 CI/CD를 구성하여 모델을 프로덕트에 배포 할 수 있습니다. 
+- 개발 환경과 배포 환경을 분리하면 프로덕트에 영향을 주지 않고 모델을 구축하고 테스트할 수 있습니다. 
+- ![image](https://user-images.githubusercontent.com/47103479/234029918-54cfe32a-ea67-4d66-a0d3-fcc6a7d5ab12.png)
+- 신규 job을 생성해줍니다.
+  - ![image](https://user-images.githubusercontent.com/47103479/234030487-079cc1bf-bf02-4bfc-967a-495feba3483c.png)
+  - ![image](https://user-images.githubusercontent.com/47103479/234030607-68244a8e-8965-499d-adc3-10ea5bfd2ab9.png)
+  - ![image](https://user-images.githubusercontent.com/47103479/234030829-1acbbdc7-c4c5-41ab-b7e3-efe33808eb9e.png)
+  - ![image](https://user-images.githubusercontent.com/47103479/234030887-8cd6d83d-e4f3-4510-8083-3614017eb611.png)
