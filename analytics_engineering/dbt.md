@@ -213,3 +213,27 @@
   - ![image](https://user-images.githubusercontent.com/47103479/234030607-68244a8e-8965-499d-adc3-10ea5bfd2ab9.png)
   - ![image](https://user-images.githubusercontent.com/47103479/234030829-1acbbdc7-c4c5-41ab-b7e3-efe33808eb9e.png)
   - ![image](https://user-images.githubusercontent.com/47103479/234030887-8cd6d83d-e4f3-4510-8083-3614017eb611.png)
+- ![image](https://user-images.githubusercontent.com/47103479/234595602-2941d542-4b67-4352-9ac7-73daf0446378.png)
+- ![image](https://user-images.githubusercontent.com/47103479/234595934-269e97c2-1e25-4b3f-bbe5-02a11aebe341.png)
+- ![image](https://user-images.githubusercontent.com/47103479/234021073-ab0ff278-e5ae-4a49-b8c3-1b9a836daf4e.png)
+
+# 구글 데이터 스튜디오
+- https://lookerstudio.google.com/u/1/navigation/reporting
+- 사용자가 Google Analytics, Google Ads, Google Sheets, 데이터베이스 등과 같은 여러 데이터 소스에 연결하여 보고서를 생성할 수 있는 Looker Studio 기반 데이터 시각화 및 보고 도구입니다
+- 데이터 소스
+  - 데이터 소스 만들기를 선택한 후에 BigQuery를 선택합니다.
+  - ![image](https://user-images.githubusercontent.com/47103479/234596548-f22f48d5-7332-4f1b-9fe1-fede19c4ad93.png)
+  - ![image](https://user-images.githubusercontent.com/47103479/234597077-0ab75e04-ae2d-4112-a78a-b69548a04d47.png)
+  - 데이터 소스로 사용할 테이블을 선택합니다.
+  - ![image](https://user-images.githubusercontent.com/47103479/234597781-cde821cf-e2a3-4e35-84ed-78bb9e9b1128.png)
+  - ![image](https://user-images.githubusercontent.com/47103479/234598160-cdc4107e-4bc9-4862-a705-2bd5987101c3.png)
+- 보고서 만들기
+  - ![image](https://user-images.githubusercontent.com/47103479/234598505-2fe036d1-ca5c-42e6-a3b8-f0b4a3f3d933.png)
+  - 차트를 추가해줍니다.
+    - ![image](https://user-images.githubusercontent.com/47103479/234598894-41608977-dce6-4eb8-9b6b-90d6d1c4e22a.png)
+    - ![image](https://user-images.githubusercontent.com/47103479/234599212-ed3fa6f8-941e-414f-8a19-7c497c779d89.png)
+  - 컨트롤 추가에서 기간 컨트롤을 추가해줍니다.
+    - ![image](https://user-images.githubusercontent.com/47103479/234599391-e0a9fe52-6fb8-487a-b363-0abf0585c0cf.png)
+  - 계산된 필드를 만들어줍니다.
+    - ![image](https://user-images.githubusercontent.com/47103479/234602984-0fae4c2b-fe17-4a97-871e-77a492a7900c.png)
+- ![image](https://user-images.githubusercontent.com/47103479/234604394-9ac12a2a-9076-4b2a-bb4b-61b83611b0c6.png)
