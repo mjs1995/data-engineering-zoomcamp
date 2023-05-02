@@ -1,5 +1,5 @@
 # 가이드 
-- [dbt.md](https://github.com/mjs1995/data-engineering-zoomcamp/blob/main/analytics_engineering/dbt.md) : 프로젝트 구축에 대한 가이드
+- [dbt.md](https://github.com/mjs1995/data-engineering-zoomcamp/blob/main/04_analytics_engineering/dbt.md) : 프로젝트 구축에 대한 가이드
 - [dbt 개요](https://github.com/mjs1995/muse-data-engineer/blob/main/doc/workflow/dbt_base.md) : dbt에 대한 설명 
 
 # 사전 준비
@@ -32,3 +32,6 @@
 - `$ dbt test` : 데이터를 테스트합니다. 3개의 단계를 한번에 실행하려면 `$ dbt build`를 사용할 수 있습니다.
 - `$ dbt docs generate` : 프로젝트 문서를 생성합니다.
 - `$ dbt docs serve` : 프로젝트 문서를 확인합니다. 이 단계는 문서 페이지를 웹서버에서 열지만 http://localhost:8080에서도 확인할 수 있습니다.
+
+# Lookerstudio
+- ![image](https://user-images.githubusercontent.com/47103479/234604394-9ac12a2a-9076-4b2a-bb4b-61b83611b0c6.png)
