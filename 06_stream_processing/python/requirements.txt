@@ -4,3 +4,4 @@ requests
 avro
 faust
 fastavro
+pyspark

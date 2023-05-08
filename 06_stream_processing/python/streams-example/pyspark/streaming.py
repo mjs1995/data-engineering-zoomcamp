@@ -1,5 +1,7 @@
 from pyspark.sql import SparkSession
 import pyspark.sql.functions as F
+import findspark
+findspark.init()
 
 from settings import RIDE_SCHEMA, CONSUME_TOPIC_RIDES_CSV, TOPIC_WINDOWED_VENDOR_ID_COUNT
 
