@@ -1,5 +1,5 @@
 # 가이드 
-- [bigquery.md](https://github.com/mjs1995/data-engineering-zoomcamp/blob/main/03_data_warehouse/bigquery.md) : 프로젝트 구축에 대한 가이드
+- [bigquery.md](bigquery.md) : 프로젝트 구축에 대한 가이드
 
 # Bigquery
 - Data Warehouse

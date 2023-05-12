@@ -1,5 +1,5 @@
 # 가이드 
-- [dbt.md](https://github.com/mjs1995/data-engineering-zoomcamp/blob/main/04_analytics_engineering/dbt.md) : 프로젝트 구축에 대한 가이드
+- [dbt.md](dbt.md) : 프로젝트 구축에 대한 가이드
 - [dbt 개요](https://github.com/mjs1995/muse-data-engineer/blob/main/doc/workflow/dbt_base.md) : dbt에 대한 설명 
 
 # 사전 준비
