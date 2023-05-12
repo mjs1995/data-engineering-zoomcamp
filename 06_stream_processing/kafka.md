@@ -1,4 +1,22 @@
 # docker에서 Spark 및 Kafka 실행
+- <img width="984" alt="image" src="https://github.com/mjs1995/data-engineering-zoomcamp/assets/47103479/83eac3c0-8c1b-44f7-9326-41f034cacadf">
+  - https://www.slideshare.net/PaoloCastagna1/introduction-to-apache-kafka-confluent-and-why-they-matter
+- 아파치 카프카(Apache Kafka)는 분산 스트리밍 플랫폼이며 데이터 피드의 분산 스트리밍, 파이프 라이닝 및 재생을 위한 실시간 스트리밍 데이터를 처리하기 위한 목적으로 설계된 오픈 소스 분산형 게시-구독 메시징 플랫폼입니다.
+- 도커 파일로 사용한 서비스입니다.
+  - Apache Spark Master: Spark 클러스터에서 작업을 조정하고 클러스터 내에서 작업자 노드에 작업을 분배하는 역할을 합니다.
+  - Apache Spark Worker: Spark 클러스터에서 실제로 데이터 처리 작업을 수행하는 노드입니다. 마스터 노드로부터 작업을 할당받아 데이터 처리를 수행하게 됩니다.
+  - Apache Kafka Broker: 분산 스트리밍 플랫폼인 Apache Kafka에서 메시지 브로커 역할을 수행합니다. Producer와 Consumer가 메시지를 주고 받을 수 있도록 중개 역할을 합니다.
+  - Confluent Schema Registry: 데이터 스키마 버전 관리를 위한 서비스로, Kafka 메시지를 전송할 때 메시지의 구조와 형식을 검증하여 데이터 무결성을 유지합니다. 스키마 레지스트리는 스키마 생성, 조회, 관리에 대한 HTTP API를 제공하고 있습니다
+  - Apache Kafka ZooKeeper: Apache Kafka 클러스터의 메타 데이터 정보를 저장하고 관리하는 역할을 합니다.
+  - Confluent Control Center: Confluent Platform의 모니터링 및 관리 도구로, Kafka와 관련된 모든 작업을 한 곳에서 수행할 수 있도록 도와줍니다. 토픽 생성, 파티션 및 레플리카 관리, 스키마 관리, 모니터링 및 경고 등을 수행할 수 있습니다.
+- docker-compose.yml 파일의 서비스들입니다.
+  - jupyterlab: JupyterLab 서비스를 실행합니다.
+  - spark-master: Apache Spark 클러스터의 마스터 노드를 실행합니다.
+  - spark-worker-1, spark-worker-2: Apache Spark 클러스터의 워커 노드를 실행합니다.
+  - broker: Apache Kafka 브로커를 실행합니다.
+  - schema-registry: Confluent Schema Registry 서비스를 실행합니다.
+  - zookeeper: Apache Kafka의 ZooKeeper를 실행합니다.
+  - control-center: Confluent Control Center 서비스를 실행합니다.
 - 도커 데스크탑을 실행한 뒤에 Spark 컨테이너(spark master, spark worker, jupyterlab)를 빌드하는 데 필요한 도커 이미지를 다운로드합니다.
 - ```bash
   ./build.sh 
@@ -209,6 +227,7 @@
 - ![image](https://user-images.githubusercontent.com/47103479/236828890-2d3b5349-1c71-476b-8293-0c8a0021f32c.png)
 
 # PySpark Streaming
+- streaming.py는 스파크를 사용하여 Kafka로부터 스트리밍 데이터를 읽어들이고, 파싱하고, 집계한 후 콘솔에 출력하거나 다시 Kafka로 출력하는 코드입니다.
 - streaming.py의 소스 코드는 다음과 같습니다.
 - ```python
   from pyspark.sql import SparkSession
