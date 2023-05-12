@@ -1,5 +1,5 @@
 # 가이드
-- [gcp_set.md](https://github.com/mjs1995/data-engineering-zoomcamp/blob/main/01_basics_n_setup/gcp_set.md) : 프로젝트 구축에 대한 가이드 
+- [gcp_set.md](gcp_set.md) : 프로젝트 구축에 대한 가이드 
 
 # 환경 설정 
 - GCP 환경 세팅

@@ -1,5 +1,5 @@
 # 가이드 
-- [prefect_gcp.md](https://github.com/mjs1995/data-engineering-zoomcamp/blob/main/02_workflow_orchestration/prefect_gcp.md) : 프로젝트 구축에 대한 가이드 
+- [prefect_gcp.md](prefect_gcp.md) : 프로젝트 구축에 대한 가이드 
 - [prefect 개요](https://github.com/mjs1995/muse-data-engineer/blob/main/doc/workflow/prefect_base.md) : prefect에 대한 설명 
 
 # Prefect

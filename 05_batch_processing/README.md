@@ -1,5 +1,5 @@
 # 가이드 
-- [dataproc.md](https://github.com/mjs1995/data-engineering-zoomcamp/blob/main/05_batch_processing/dataproc.md) : 프로젝트 구축에 대한 가이드 
+- [dataproc.md](dataproc.md) : 프로젝트 구축에 대한 가이드 
 
 # Dataproc
 작업 매개변수
